@@ -1,0 +1,1 @@
+# Sistema-de-Monitoramento-de-Res-duos-e-Reciclagem-EcoRecicla-
