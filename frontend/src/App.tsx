@@ -1,180 +1,204 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Trash2, Search, PlusCircle, Leaf, Recycle, MapPin } from 'lucide-react';
+import { Trash2, Search, PlusCircle, Recycle, X, BarChart3 } from 'lucide-react';
 import './App.css';
 
+// Interface alinhada ao modelo RegistroResiduo do seu Backend
 interface RegistroResiduo {
-  id?: string;
-  municipio: string;
-  estado: string;
-  quantidadeGerada: number;
-  taxaReciclagem: number;
-  ano: number;
+  id?: number;
+  tipoResiduo: string;
+  quantidade: number;
+  unidade: string;
+  dataColeta: string;
 }
 
 const API_URL = "http://localhost:8080/api/residuos";
 
 function App() {
-  const [residuos, setResiduos] = useState<RegistroResiduo[]>([]);
-  const [filtroUf, setFiltroUf] = useState("");
-  const [novo, setNovo] = useState<RegistroResiduo>({
-    municipio: '', estado: '', quantidadeGerada: 0, taxaReciclagem: 0, ano: 2026
+  const [registros, setRegistros] = useState<RegistroResiduo[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const [formData, setFormData] = useState<RegistroResiduo>({
+    tipoResiduo: '',
+    quantidade: 1,
+    unidade: 'kg',
+    dataColeta: new Date().toISOString().split('T')[0]
   });
 
-  useEffect(() => {
-    fetchResiduos();
-  }, []);
-
-  const fetchResiduos = async () => {
-    try {
-      const res = await axios.get(API_URL);
-      setResiduos(res.data);
-    } catch (err) {
-      console.error("Erro ao buscar dados", err);
-    }
-  };
-
-  const handleFiltro = async () => {
-    if (!filtroUf) return fetchResiduos();
-    try {
-      const res = await axios.get(`${API_URL}/estado/${filtroUf}`);
-      setResiduos(res.data);
-    } catch (err) {
-      console.error("Erro ao filtrar", err);
-    }
-  };
-
-  const handleSalvar = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await axios.post(API_URL, novo);
-      setNovo({ municipio: '', estado: '', quantidadeGerada: 0, taxaReciclagem: 0, ano: 2026 });
-      fetchResiduos();
-    } catch (err) {
-      alert("Erro ao salvar registro");
-    }
+    const novoRegistro = { ...formData, id: Date.now() };
+    setRegistros([novoRegistro, ...registros]);
+    
+    setIsModalOpen(false);
+    setFormData({
+      tipoResiduo: '',
+      quantidade: 0,
+      unidade: 'kg',
+      dataColeta: new Date().toISOString().split('T')[0]
+    });
   };
 
-  const handleDeletar = async (id: string) => {
-    if (confirm("Deseja realmente excluir este registro?")) {
-      try {
-        await axios.delete(`${API_URL}/${id}`);
-        fetchResiduos();
-      } catch (err) {
-        console.error("Erro ao deletar", err);
-      }
-    }
+  const deleteRegistro = (id?: number) => {
+    setRegistros(registros.filter(r => r.id !== id));
   };
 
   return (
-    <div className="dashboard-container">
-      <header className="top-header">
-        <div className="logo-area">
-          <Leaf className="logo-icon" size={32} />
-          <h1>Eco<span>Recicla</span></h1>
+    <div className="dashboard-layout">
+      {/* Sidebar Simplificada */}
+      <aside className="sidebar">
+        <div className="sidebar-logo">
+          <Recycle size={28} className="logo-icon" />
+          <span>EcoRecicla</span>
         </div>
-        <p>Monitoramento Nacional de Resíduos</p>
-      </header>
+        <nav className="sidebar-menu">
+          <a href="#" className="menu-item active"><BarChart3 size={20} /> Dashboard</a>
+        </nav>
+      </aside>
 
+      {/* Área Principal */}
       <main className="main-content">
-        {/* Painel Esquerdo: Formulário */}
-        <section className="form-section panel-card">
-          <div className="panel-header">
-            <PlusCircle size={24} className="text-primary" />
-            <h2>Novo Lançamento</h2>
+        <header className="content-header">
+          <div className="header-title">
+            <h1>Gestão de Resíduos</h1>
+            <p>Monitore e registre a coleta de materiais recicláveis.</p>
           </div>
-          <form onSubmit={handleSalvar} className="elegant-form">
-            <div className="input-group">
-              <label>Município</label>
-              <input placeholder="Ex: São Paulo" value={novo.municipio} onChange={e => setNovo({...novo, municipio: e.target.value})} required />
-            </div>
-            
-            <div className="form-row">
-              <div className="input-group">
-                <label>UF</label>
-                <input placeholder="SP" maxLength={2} value={novo.estado} onChange={e => setNovo({...novo, estado: e.target.value.toUpperCase()})} required />
-              </div>
-              <div className="input-group">
-                <label>Ano</label>
-                <input type="number" value={novo.ano} onChange={e => setNovo({...novo, ano: Number(e.target.value)})} required />
-              </div>
-            </div>
+          <button className="btn-new" onClick={() => setIsModalOpen(true)}>
+            <PlusCircle size={20} /> Novo Cadastro
+          </button>
+        </header>
 
-            <div className="form-row">
-              <div className="input-group">
-                <label>Geração (t)</label>
-                <input type="number" step="0.1" placeholder="Toneladas" value={novo.quantidadeGerada || ''} onChange={e => setNovo({...novo, quantidadeGerada: Number(e.target.value)})} required />
-              </div>
-              <div className="input-group">
-                <label>Reciclagem (%)</label>
-                <input type="number" step="0.1" placeholder="Taxa %" value={novo.taxaReciclagem || ''} onChange={e => setNovo({...novo, taxaReciclagem: Number(e.target.value)})} required />
-              </div>
+        {/* Modal de Cadastro */}
+        {isModalOpen && (
+          <div className="modal-overlay">
+            <div className="modal-container">
+              <div className="modal-header">
+  <h2>Registrar Coleta</h2>
+  <button className="btn-close" onClick={() => setIsModalOpen(false)}>
+    <X size={20} />
+  </button>
+</div>
+              <form className="modal-form" onSubmit={handleSubmit}>
+                <div className="form-field">
+                  <label>Tipo de Material</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: Plástico PET, Alumínio..." 
+                    value={formData.tipoResiduo}
+                    onChange={(e) => setFormData({...formData, tipoResiduo: e.target.value})}
+                    required 
+                  />
+                </div>
+                <div className="form-row">
+                  <div className="form-field">
+  <label>Quantidade</label>
+  <input 
+    type="number" 
+    step="1"        // Define o passo como 1 (bloqueia setas para decimais)
+    pattern="[0-9]*" // Sugestão para teclados móveis aceitarem apenas números
+    min="1"          // Impede números negativos ou zero, se desejar
+    value={formData.quantidade}
+    onKeyDown={(e) => {
+      // Bloqueia as teclas de vírgula e ponto diretamente
+      if (e.key === ',' || e.key === '.') {
+        e.preventDefault();
+      }
+    }}
+    onChange={(e) => {
+      // Converte para inteiro e remove qualquer resquício de decimais
+      const val = parseInt(e.target.value, 10);
+      setFormData({...formData, quantidade: isNaN(val) ? 0 : val});
+    }}
+    required 
+  />
+</div>
+                  <div className="form-field">
+                    <label>Unidade</label>
+                    <select 
+                      value={formData.unidade}
+                      onChange={(e) => setFormData({...formData, unidade: e.target.value})}
+                    >
+                      <option value="kg">Kg</option>
+                      <option value="ton">Ton</option>     
+                    </select>
+                  </div>
+                </div>
+                <div className="form-field">
+                  <label>Data da Coleta</label>
+                  <input 
+                    type="date" 
+                    value={formData.dataColeta}
+                    onChange={(e) => setFormData({...formData, dataColeta: e.target.value})}
+                    required 
+                  />
+                </div>
+                <div className="modal-actions">
+                 <button 
+                   type="button" 
+                   className="btn-cancel" 
+                  onClick={() => setIsModalOpen(false)}
+                  >
+                  Cancelar
+                  </button>
+                   <button 
+                    type="submit" 
+                    className="btn-save"
+                   >    
+                   Salvar Registro
+                   </button>
+                </div>
+              </form>
             </div>
+          </div>
+        )}
 
-            <button type="submit" className="btn-primary">
-              Cadastrar Dados <Recycle size={18} />
-            </button>
-          </form>
-        </section>
-
-        {/* Painel Direito: Dashboard e Tabela */}
+        {/* Listagem */}
         <section className="data-section">
-          
-          <div className="search-widget panel-card">
-            <Search className="text-muted" size={20} />
+          <div className="search-bar">
+            <Search size={20} />
             <input 
-              placeholder="Buscar histórico por estado (Ex: SP)..." 
-              value={filtroUf} 
-              onChange={e => setFiltroUf(e.target.value.toUpperCase())}
-              onKeyUp={handleFiltro}
+              type="text" 
+              placeholder="Pesquisar por material..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <div className="table-widget panel-card">
-            <div className="panel-header">
-              <MapPin size={24} className="text-primary" />
-              <h2>Dados Regionais</h2>
-            </div>
-            
-            <div className="table-responsive">
-              <table className="modern-table">
-                <thead>
-                  <tr>
-                    <th>Localidade</th>
-                    <th>Volume Gerado</th>
-                    <th>Taxa de Reciclagem</th>
-                    <th>Ano</th>
-                    <th>Ações</th>
+          <div className="table-container">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Material</th>
+                  <th>Quantidade</th>
+                  <th>Unidade</th>
+                  <th>Data</th>
+                  <th className="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {registros.filter(r => r.tipoResiduo.toLowerCase().includes(searchTerm.toLowerCase())).map((reg) => (
+                  <tr key={reg.id}>
+                    <td><strong>{reg.tipoResiduo}</strong></td>
+                    <td>{reg.quantidade}</td>
+                    <td><span className="badge-unit">{reg.unidade}</span></td>
+                    <td>{new Date(reg.dataColeta).toLocaleDateString('pt-BR')}</td>
+                    <td className="text-center">
+                      <button className="btn-delete" onClick={() => deleteRegistro(reg.id)}>
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {residuos.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="empty-state">Nenhum dado encontrado para o filtro atual.</td>
-                    </tr>
-                  ) : (
-                    residuos.map(r => (
-                      <tr key={r.id}>
-                        <td className="fw-bold">{r.municipio} - <span className="badge-uf">{r.estado}</span></td>
-                        <td>{r.quantidadeGerada} t</td>
-                        <td>
-                          <div className="progress-container">
-                            <div className="progress-bar" style={{width: `${Math.min(r.taxaReciclagem, 100)}%`}}></div>
-                            <span>{r.taxaReciclagem}%</span>
-                          </div>
-                        </td>
-                        <td>{r.ano}</td>
-                        <td>
-                          <button onClick={() => handleDeletar(r.id!)} className="btn-icon" title="Excluir">
-                            <Trash2 size={18} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                ))}
+               {registros.length === 0 && (
+                   <tr>
+                     <td colSpan={5} className="empty-state-cell">
+                          Nenhum registro encontrado.
+                     </td>
+                  </tr>
+                 )}
+              </tbody>
+            </table>
           </div>
         </section>
       </main>
