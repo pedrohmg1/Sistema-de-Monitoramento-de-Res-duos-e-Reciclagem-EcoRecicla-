@@ -1,7 +1,15 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Trash2, Search, PlusCircle, Recycle, X, BarChart3 } from 'lucide-react';
-import './App.css';
+import { useState, useEffect, useMemo } from "react";
+import axios from "axios";
+import {
+  Trash2,
+  Search,
+  PlusCircle,
+  Recycle,
+  X,
+  BarChart3,
+} from "lucide-react";
+import { SelectEstado } from "./SelectEstado";
+//import "./App.css";
 
 // Interface agora alinhada ao modelo RegistroResiduo do backend
 interface RegistroResiduo {
@@ -9,15 +17,15 @@ interface RegistroResiduo {
   municipio: string;
   estado: string;
   quantidadeGerada: number; // toneladas
-  taxaReciclagem: number;   // percentual
+  taxaReciclagem: number; // percentual
   ano: number;
 }
 
 const API_URL = "http://localhost:8080/api/residuos";
 
-const formInicial: Omit<RegistroResiduo, 'id'> = {
-  municipio: '',
-  estado: '',
+const formInicial: Omit<RegistroResiduo, "id"> = {
+  municipio: "",
+  estado: "",
   quantidadeGerada: 0,
   taxaReciclagem: 0,
   ano: new Date().getFullYear(),
@@ -26,11 +34,12 @@ const formInicial: Omit<RegistroResiduo, 'id'> = {
 function App() {
   const [registros, setRegistros] = useState<RegistroResiduo[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<Omit<RegistroResiduo, 'id'>>(formInicial);
+  const [formData, setFormData] =
+    useState<Omit<RegistroResiduo, "id">>(formInicial);
 
   // Carrega os dados do backend ao iniciar
   useEffect(() => {
@@ -44,7 +53,9 @@ function App() {
       const resposta = await axios.get<RegistroResiduo[]>(API_URL);
       setRegistros(resposta.data);
     } catch {
-      setErro('Não foi possível conectar ao servidor. Verifique se o backend está rodando.');
+      setErro(
+        "Não foi possível conectar ao servidor. Verifique se o backend está rodando."
+      );
     } finally {
       setLoading(false);
     }
@@ -59,7 +70,7 @@ function App() {
       setIsModalOpen(false);
       setFormData(formInicial);
     } catch {
-      setErro('Erro ao salvar o registro. Tente novamente.');
+      setErro("Erro ao salvar o registro. Tente novamente.");
     }
   };
 
@@ -68,16 +79,18 @@ function App() {
     setErro(null);
     try {
       await axios.delete(`${API_URL}/${id}`);
-      setRegistros(registros.filter(r => r.id !== id));
+      setRegistros(registros.filter((r) => r.id !== id));
     } catch {
-      setErro('Erro ao deletar o registro.');
+      setErro("Erro ao deletar o registro.");
     }
   };
 
-  const registrosFiltrados = registros.filter(r =>
+  const registrosFiltrados = useMemo(() => {
+  return registros.filter(r =>
     (r.municipio ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (r.estado ?? '').toLowerCase().includes(searchTerm.toLowerCase())
   );
+}, [registros, searchTerm]);
 
   return (
     <div className="dashboard-layout">
@@ -88,7 +101,9 @@ function App() {
           <span>EcoRecicla</span>
         </div>
         <nav className="sidebar-menu">
-          <a href="#" className="menu-item active"><BarChart3 size={20} /> Dashboard</a>
+          <a href="#" className="menu-item active">
+            <BarChart3 size={20} /> Dashboard
+          </a>
         </nav>
       </aside>
 
@@ -108,7 +123,9 @@ function App() {
         {erro && (
           <div className="alert-erro">
             {erro}
-            <button onClick={() => setErro(null)}><X size={16} /></button>
+            <button onClick={() => setErro(null)}>
+              <X size={16} />
+            </button>
           </div>
         )}
 
@@ -118,7 +135,10 @@ function App() {
             <div className="modal-container">
               <div className="modal-header">
                 <h2>Registrar Dados</h2>
-                <button className="btn-close" onClick={() => setIsModalOpen(false)}>
+                <button
+                  className="btn-close"
+                  onClick={() => setIsModalOpen(false)}
+                >
                   <X size={20} />
                 </button>
               </div>
@@ -130,19 +150,19 @@ function App() {
                       type="text"
                       placeholder="Ex: São Paulo"
                       value={formData.municipio}
-                      onChange={(e) => setFormData({ ...formData, municipio: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, municipio: e.target.value })
+                      }
                       required
                     />
                   </div>
                   <div className="form-field">
-                    <label>Estado (UF)</label>
-                    <input
-                      type="text"
-                      placeholder="Ex: SP"
-                      maxLength={2}
+                    <label >Estado (UF)</label>
+                    <SelectEstado
                       value={formData.estado}
-                      onChange={(e) => setFormData({ ...formData, estado: e.target.value.toUpperCase() })}
-                      required
+                      onChange={(valor) =>
+                        setFormData({ ...formData, estado: valor })
+                      }
                     />
                   </div>
                 </div>
@@ -154,7 +174,12 @@ function App() {
                       min="0"
                       step="0.01"
                       value={formData.quantidadeGerada}
-                      onChange={(e) => setFormData({ ...formData, quantidadeGerada: parseFloat(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          quantidadeGerada: parseFloat(e.target.value) || 0,
+                        })
+                      }
                       required
                     />
                   </div>
@@ -166,7 +191,12 @@ function App() {
                       max="100"
                       step="0.1"
                       value={formData.taxaReciclagem}
-                      onChange={(e) => setFormData({ ...formData, taxaReciclagem: parseFloat(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          taxaReciclagem: parseFloat(e.target.value) || 0,
+                        })
+                      }
                       required
                     />
                   </div>
@@ -178,12 +208,23 @@ function App() {
                     min="2000"
                     max={new Date().getFullYear()}
                     value={formData.ano}
-                    onChange={(e) => setFormData({ ...formData, ano: parseInt(e.target.value, 10) || new Date().getFullYear() })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        ano:
+                          parseInt(e.target.value, 10) ||
+                          new Date().getFullYear(),
+                      })
+                    }
                     required
                   />
                 </div>
                 <div className="modal-actions">
-                  <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>
+                  <button
+                    type="button"
+                    className="btn-cancel"
+                    onClick={() => setIsModalOpen(false)}
+                  >
                     Cancelar
                   </button>
                   <button type="submit" className="btn-save">
@@ -209,7 +250,15 @@ function App() {
 
           <div className="table-container">
             {loading ? (
-              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Carregando dados...</p>
+              <p
+                style={{
+                  textAlign: "center",
+                  padding: "2rem",
+                  color: "var(--text-muted)",
+                }}
+              >
+                Carregando dados...
+              </p>
             ) : (
               <table className="data-table">
                 <thead>
@@ -225,13 +274,22 @@ function App() {
                 <tbody>
                   {registrosFiltrados.map((reg) => (
                     <tr key={reg.id}>
-                      <td><strong>{reg.municipio}</strong></td>
-                      <td><span className="badge-unit">{reg.estado}</span></td>
-                      <td>{(reg.quantidadeGerada ?? 0).toLocaleString('pt-BR')}</td>
+                      <td>
+                        <strong>{reg.municipio}</strong>
+                      </td>
+                      <td>
+                        <span className="badge-unit">{reg.estado}</span>
+                      </td>
+                      <td>
+                        {(reg.quantidadeGerada ?? 0).toLocaleString("pt-BR")}
+                      </td>
                       <td>{(reg.taxaReciclagem ?? 0).toFixed(1)}%</td>
                       <td>{reg.ano}</td>
                       <td className="text-center">
-                        <button className="btn-delete" onClick={() => deleteRegistro(reg.id)}>
+                        <button
+                          className="btn-delete"
+                          onClick={() => deleteRegistro(reg.id)}
+                        >
                           <Trash2 size={18} />
                         </button>
                       </td>
