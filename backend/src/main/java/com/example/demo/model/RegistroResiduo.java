@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "testes")
+@Document(collection = "registros")
 public class RegistroResiduo {
     
     @Id

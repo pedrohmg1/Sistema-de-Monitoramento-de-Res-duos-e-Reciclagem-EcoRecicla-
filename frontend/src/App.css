@@ -291,3 +291,25 @@ input, select {
 .btn-delete:hover { background: #fef2f2; }
 
 .text-center { text-align: center; }
+
+.alert-erro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.alert-erro button {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}

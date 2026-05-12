@@ -6,5 +6,8 @@
 		{
 			"path": "frontend"
 		}
-	]
+	],
+	"settings": {
+		"java.compile.nullAnalysis.mode": "automatic"
+	}
 }
