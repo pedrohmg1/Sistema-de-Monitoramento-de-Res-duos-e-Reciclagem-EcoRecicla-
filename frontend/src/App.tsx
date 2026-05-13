@@ -13,12 +13,7 @@ import {
 } from "lucide-react";
 import { RegistroModal } from "./RegistroModal";
 
-<<<<<<< Updated upstream
 // CORREÇÃO: Campos novos marcados com '?' (opcionais) para evitar erro de tipagem no Modal
-=======
-
-// Interface agora alinhada ao modelo RegistroResiduo do backend
->>>>>>> Stashed changes
 interface RegistroResiduo {
   id?: string;
   municipio: string;
@@ -26,13 +21,6 @@ interface RegistroResiduo {
   quantidadeGerada: number;
   taxaReciclagem: number;
   ano: number;
-<<<<<<< Updated upstream
-  unidades?: number;        // Opcional
-  nomeUnidade?: string;     // Opcional
-  tipoUnidade?: string;     // Opcional
-  operadorUnidade?: string; // Opcional
-=======
->>>>>>> Stashed changes
 }
 
 const API_URL = "http://localhost:8080/api/residuos";
@@ -43,23 +31,12 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-<<<<<<< Updated upstream
-  const [registroEditando, setRegistroEditando] = useState<RegistroResiduo | null>(null);
-=======
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedEstado, setSelectedEstado] = useState(""); // Novo
   const [filtroAbaixoMedia, setFiltroAbaixoMedia] = useState(false); // Novo
+  const [registroEditando, setRegistroEditando] = useState<RegistroResiduo | null>(null);
   
-  
->>>>>>> Stashed changes
 
   const [currentPage, setCurrentPage] = useState(1);
-<<<<<<< Updated upstream
-  const [itensPorPagina, setItensPorPagina] = useState(10);
-
-  // CORREÇÃO: Função carregarRegistros definida antes de ser usada nos Effects
-  async function carregarRegistros() {
-=======
   const [itensPorPagina, setItensPorPagina] = useState(10); // Novo estado para controlar o limite de exibição
   const [totalPages, setTotalPages] = useState(1);
 
@@ -69,7 +46,6 @@ function App() {
   }, [currentPage, itensPorPagina, searchTerm]);
 
   const carregarRegistros = async () => {
->>>>>>> Stashed changes
     setLoading(true);
     setErro(null);
     try {
@@ -102,21 +78,25 @@ function App() {
     setIsModalOpen(true);
   };
 
-<<<<<<< Updated upstream
-  const abrirModalEdicao = (registro: RegistroResiduo) => {
-    setRegistroEditando(registro);
-    setIsModalOpen(true);
-  };
-
   const fecharModal = () => {
     setIsModalOpen(false);
     setRegistroEditando(null);
   };
 
+  const abrirModalEdicao = (registro: RegistroResiduo) => {
+    setRegistroEditando(registro);
+    setIsModalOpen(true);
+  };
+
+  // Reseta para a página 1 sempre que o usuário pesquisar algo novo ou alterar o limite
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, itensPorPagina]);
+
   const handleSalvarRegistro = async (data: Omit<RegistroResiduo, "id">) => {
     setErro(null);
     try {
-      if (registroEditando && registroEditando.id) {
+       if (registroEditando && registroEditando.id) {
         // ATUALIZAR (PUT)
         const resposta = await axios.put<RegistroResiduo>(`${API_URL}/${registroEditando.id}`, data);
         setRegistros(registros.map((r) => r.id === registroEditando.id ? resposta.data : r));
@@ -126,11 +106,12 @@ function App() {
         setRegistros([resposta.data, ...registros]);
       }
       fecharModal();
-=======
-  // Reseta para a página 1 sempre que o usuário pesquisar algo novo ou alterar o limite
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, itensPorPagina]);
+
+       } catch (error) {
+      setErro("Erro ao salvar o registro. Tente novamente.");
+      throw error;
+    }
+  };
 
   const handleCriarRegistro = async (data: Omit<RegistroResiduo, "id">) => {
     setErro(null);
@@ -139,7 +120,6 @@ function App() {
       setIsModalOpen(false);
       setCurrentPage(1); // Volta pro início para ver o novo registro
       carregarRegistros();
->>>>>>> Stashed changes
     } catch (error) {
       setErro("Erro ao salvar o registro. Tente novamente.");
       throw error;
@@ -151,15 +131,7 @@ function App() {
     setErro(null);
     try {
       await axios.delete(`${API_URL}/${id}`);
-<<<<<<< Updated upstream
-      setRegistros(registros.filter((r) => r.id !== id));
-      
-      if (registrosPaginados.length === 1 && currentPage > 1) {
-        setCurrentPage(prev => prev - 1);
-      }
-=======
       carregarRegistros(); // Puxa a lista atualizada do backend
->>>>>>> Stashed changes
     } catch {
       setErro("Erro ao deletar o registro.");
     }
@@ -172,17 +144,11 @@ function App() {
     );
   }, [registros, searchTerm]); */
 
-<<<<<<< Updated upstream
-  const totalPages = Math.ceil(registrosFiltrados.length / itensPorPagina);
-  const startIndex = (currentPage - 1) * itensPorPagina;
-  const registrosPaginados = registrosFiltrados.slice(startIndex, startIndex + itensPorPagina);
-=======
   // --- Lógica de Paginação ---
 /*   const totalPages = Math.ceil(registrosFiltrados.length / itensPorPagina); */
   /* const startIndex = (currentPage - 1) * itensPorPagina; */
   // Fatiar a lista filtrada para exibir APENAS os itens da página atual
  /*  const registrosPaginados = registrosFiltrados.slice(startIndex, startIndex + itensPorPagina); */
->>>>>>> Stashed changes
 
   const gerarPaginas = () => {
     const maxVisiveis = 6;
@@ -302,12 +268,8 @@ function App() {
                     </tr>
                   </thead>
                   <tbody>
-<<<<<<< Updated upstream
-                    {registrosPaginados.map((reg) => (
-=======
                     {/* Alteração crucial: Mapeando apenas a lista paginada */}
                     {registros.map((reg) => (
->>>>>>> Stashed changes
                       <tr key={reg.id}>
                         <td><strong>{reg.municipio}</strong></td>
                         <td><span className="badge-unit">{reg.estado}</span></td>
