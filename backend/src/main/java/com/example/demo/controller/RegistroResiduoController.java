@@ -7,6 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/residuos")
@@ -16,9 +19,14 @@ public class RegistroResiduoController {
     private final RegistroResiduoService service;
 
     @GetMapping
-    public ResponseEntity<List<RegistroResiduo>> listar() {
-        return ResponseEntity.ok(service.listarTodos());
-    }
+    public ResponseEntity<Page<RegistroResiduo>> listar(
+        @RequestParam(required = false, defaultValue = "") String termo,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+    
+    Pageable pageable = PageRequest.of(page, size);
+    return ResponseEntity.ok(service.listarTodos(termo, pageable));
+}
 
     // Endpoint para o filtro dinâmico no frontend
     @GetMapping("/estado/{uf}")

@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -13,9 +15,12 @@ public class RegistroResiduoService {
     
     private final RegistroResiduoRepository repository;
 
-    public List<RegistroResiduo> listarTodos() {
-        return repository.findAll();
+    public Page<RegistroResiduo> listarTodos(String termo, Pageable pageable) {
+    if (termo != null && !termo.trim().isEmpty()) {
+        return repository.buscarPorTermo(termo, pageable);
     }
+    return repository.findAll(pageable);
+}
 
     public List<RegistroResiduo> buscarPorEstado(String estado) {
         return repository.findByEstadoIgnoreCase(estado);

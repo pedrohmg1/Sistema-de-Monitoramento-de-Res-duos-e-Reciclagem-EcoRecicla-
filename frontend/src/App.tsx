@@ -13,7 +13,12 @@ import {
 } from "lucide-react";
 import { RegistroModal } from "./RegistroModal";
 
+<<<<<<< Updated upstream
 // CORREÇÃO: Campos novos marcados com '?' (opcionais) para evitar erro de tipagem no Modal
+=======
+
+// Interface agora alinhada ao modelo RegistroResiduo do backend
+>>>>>>> Stashed changes
 interface RegistroResiduo {
   id?: string;
   municipio: string;
@@ -21,10 +26,13 @@ interface RegistroResiduo {
   quantidadeGerada: number;
   taxaReciclagem: number;
   ano: number;
+<<<<<<< Updated upstream
   unidades?: number;        // Opcional
   nomeUnidade?: string;     // Opcional
   tipoUnidade?: string;     // Opcional
   operadorUnidade?: string; // Opcional
+=======
+>>>>>>> Stashed changes
 }
 
 const API_URL = "http://localhost:8080/api/residuos";
@@ -35,18 +43,43 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+<<<<<<< Updated upstream
   const [registroEditando, setRegistroEditando] = useState<RegistroResiduo | null>(null);
+=======
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedEstado, setSelectedEstado] = useState(""); // Novo
+  const [filtroAbaixoMedia, setFiltroAbaixoMedia] = useState(false); // Novo
+  
+  
+>>>>>>> Stashed changes
 
   const [currentPage, setCurrentPage] = useState(1);
+<<<<<<< Updated upstream
   const [itensPorPagina, setItensPorPagina] = useState(10);
 
   // CORREÇÃO: Função carregarRegistros definida antes de ser usada nos Effects
   async function carregarRegistros() {
+=======
+  const [itensPorPagina, setItensPorPagina] = useState(10); // Novo estado para controlar o limite de exibição
+  const [totalPages, setTotalPages] = useState(1);
+
+  // Carrega os dados do backend ao iniciar
+  useEffect(() => {
+    carregarRegistros();
+  }, [currentPage, itensPorPagina, searchTerm]);
+
+  const carregarRegistros = async () => {
+>>>>>>> Stashed changes
     setLoading(true);
     setErro(null);
     try {
-      const resposta = await axios.get<RegistroResiduo[]>(API_URL);
-      setRegistros(resposta.data);
+      // Spring usa índice 0 para páginas, por isso currentPage - 1
+      const resposta = await axios.get(
+        `${API_URL}?termo=${searchTerm}&page=${currentPage - 1}&size=${itensPorPagina}`
+      );
+      // O Spring retorna os dados na propriedade 'content' e o total em 'totalPages'
+      setRegistros(resposta.data.content);
+      setTotalPages(resposta.data.totalPages);
     } catch {
       setErro(
         "Não foi possível conectar ao servidor. Verifique se o backend está rodando."
@@ -69,6 +102,7 @@ function App() {
     setIsModalOpen(true);
   };
 
+<<<<<<< Updated upstream
   const abrirModalEdicao = (registro: RegistroResiduo) => {
     setRegistroEditando(registro);
     setIsModalOpen(true);
@@ -92,6 +126,20 @@ function App() {
         setRegistros([resposta.data, ...registros]);
       }
       fecharModal();
+=======
+  // Reseta para a página 1 sempre que o usuário pesquisar algo novo ou alterar o limite
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, itensPorPagina]);
+
+  const handleCriarRegistro = async (data: Omit<RegistroResiduo, "id">) => {
+    setErro(null);
+    try {
+      await axios.post<RegistroResiduo>(API_URL, data);
+      setIsModalOpen(false);
+      setCurrentPage(1); // Volta pro início para ver o novo registro
+      carregarRegistros();
+>>>>>>> Stashed changes
     } catch (error) {
       setErro("Erro ao salvar o registro. Tente novamente.");
       throw error;
@@ -103,26 +151,38 @@ function App() {
     setErro(null);
     try {
       await axios.delete(`${API_URL}/${id}`);
+<<<<<<< Updated upstream
       setRegistros(registros.filter((r) => r.id !== id));
       
       if (registrosPaginados.length === 1 && currentPage > 1) {
         setCurrentPage(prev => prev - 1);
       }
+=======
+      carregarRegistros(); // Puxa a lista atualizada do backend
+>>>>>>> Stashed changes
     } catch {
       setErro("Erro ao deletar o registro.");
     }
   };
 
-  const registrosFiltrados = useMemo(() => {
+/*   const registrosFiltrados = useMemo(() => {
     return registros.filter(r =>
       (r.municipio ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (r.estado ?? '').toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [registros, searchTerm]);
+  }, [registros, searchTerm]); */
 
+<<<<<<< Updated upstream
   const totalPages = Math.ceil(registrosFiltrados.length / itensPorPagina);
   const startIndex = (currentPage - 1) * itensPorPagina;
   const registrosPaginados = registrosFiltrados.slice(startIndex, startIndex + itensPorPagina);
+=======
+  // --- Lógica de Paginação ---
+/*   const totalPages = Math.ceil(registrosFiltrados.length / itensPorPagina); */
+  /* const startIndex = (currentPage - 1) * itensPorPagina; */
+  // Fatiar a lista filtrada para exibir APENAS os itens da página atual
+ /*  const registrosPaginados = registrosFiltrados.slice(startIndex, startIndex + itensPorPagina); */
+>>>>>>> Stashed changes
 
   const gerarPaginas = () => {
     const maxVisiveis = 6;
@@ -193,11 +253,14 @@ function App() {
             <div className="search-bar" style={{ margin: 0, flex: '1 1 300px' }}>
               <Search size={20} />
               <input
-                type="text"
-                placeholder="Pesquisar por município ou estado..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+  type="text"
+  placeholder="Pesquisar por município ou estado..."
+  value={searchTerm}
+  onChange={(e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Retorna à página 1
+  }}
+/>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -205,9 +268,12 @@ function App() {
                 Registros por página:
               </label>
               <select
-                id="limitePagina"
-                value={itensPorPagina}
-                onChange={(e) => setItensPorPagina(Number(e.target.value))}
+  id="limitePagina"
+  value={itensPorPagina}
+  onChange={(e) => {
+    setItensPorPagina(Number(e.target.value));
+    setCurrentPage(1); // Retorna à página 1
+  }}
                 style={{ padding: '0.4rem', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: 'white', outline: 'none', cursor: 'pointer' }}
               >
                 <option value={10}>10</option>
@@ -236,7 +302,12 @@ function App() {
                     </tr>
                   </thead>
                   <tbody>
+<<<<<<< Updated upstream
                     {registrosPaginados.map((reg) => (
+=======
+                    {/* Alteração crucial: Mapeando apenas a lista paginada */}
+                    {registros.map((reg) => (
+>>>>>>> Stashed changes
                       <tr key={reg.id}>
                         <td><strong>{reg.municipio}</strong></td>
                         <td><span className="badge-unit">{reg.estado}</span></td>
@@ -262,7 +333,7 @@ function App() {
                         </td>
                       </tr>
                     ))}
-                    {registrosFiltrados.length === 0 && (
+                    {registros.length === 0 && (
                       <tr>
                         <td colSpan={6} className="empty-state-cell">
                           Nenhum registro encontrado.

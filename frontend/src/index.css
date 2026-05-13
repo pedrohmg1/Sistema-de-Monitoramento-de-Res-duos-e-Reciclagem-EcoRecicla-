@@ -317,3 +317,58 @@ input, select {
   display: flex;
   align-items: center;
 }
+
+.filter-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.filter-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.select-filter {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background-color: white;
+  color: #334155;
+  outline: none;
+  cursor: pointer;
+}
+
+.btn-media-filter {
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-media-active {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-media-inactive {
+  background-color: #e2e8f0;
+  color: #475569;
+}
+
+.media-info {
+  font-size: 0.85rem;
+  color: #64748b;
+  padding-bottom: 0.5rem;
+}
