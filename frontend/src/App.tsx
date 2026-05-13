@@ -9,22 +9,22 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
+  Edit2,
 } from "lucide-react";
 import { RegistroModal } from "./RegistroModal";
-//import "./App.css";
 
-// Interface agora alinhada ao modelo RegistroResiduo do backend
+// CORREÇÃO: Campos novos marcados com '?' (opcionais) para evitar erro de tipagem no Modal
 interface RegistroResiduo {
   id?: string;
   municipio: string;
   estado: string;
-  quantidadeGerada: number; // toneladas
-  taxaReciclagem: number; // percentual
+  quantidadeGerada: number;
+  taxaReciclagem: number;
   ano: number;
-  unidades: number;
-  nomeUnidade: string;
-  tipoUnidade: string;
-  operadorUnidade: string ;
+  unidades?: number;        // Opcional
+  nomeUnidade?: string;     // Opcional
+  tipoUnidade?: string;     // Opcional
+  operadorUnidade?: string; // Opcional
 }
 
 const API_URL = "http://localhost:8080/api/residuos";
@@ -35,22 +35,13 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [registroEditando, setRegistroEditando] = useState<RegistroResiduo | null>(null);
 
-  // --- Estados da Paginação ---
   const [currentPage, setCurrentPage] = useState(1);
-  const [itensPorPagina, setItensPorPagina] = useState(10); // Novo estado para controlar o limite de exibição
+  const [itensPorPagina, setItensPorPagina] = useState(10);
 
-  // Carrega os dados do backend ao iniciar
-  useEffect(() => {
-    carregarRegistros();
-  }, []);
-
-  // Reseta para a página 1 sempre que o usuário pesquisar algo novo ou alterar o limite
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, itensPorPagina]);
-
-  const carregarRegistros = async () => {
+  // CORREÇÃO: Função carregarRegistros definida antes de ser usada nos Effects
+  async function carregarRegistros() {
     setLoading(true);
     setErro(null);
     try {
@@ -63,14 +54,44 @@ function App() {
     } finally {
       setLoading(false);
     }
+  }
+
+  useEffect(() => {
+    carregarRegistros();
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, itensPorPagina]);
+
+  const abrirModalNovo = () => {
+    setRegistroEditando(null);
+    setIsModalOpen(true);
   };
 
-  const handleCriarRegistro = async (data: Omit<RegistroResiduo, "id">) => {
+  const abrirModalEdicao = (registro: RegistroResiduo) => {
+    setRegistroEditando(registro);
+    setIsModalOpen(true);
+  };
+
+  const fecharModal = () => {
+    setIsModalOpen(false);
+    setRegistroEditando(null);
+  };
+
+  const handleSalvarRegistro = async (data: Omit<RegistroResiduo, "id">) => {
     setErro(null);
     try {
-      const resposta = await axios.post<RegistroResiduo>(API_URL, data);
-      setRegistros([resposta.data, ...registros]);
-      setIsModalOpen(false);
+      if (registroEditando && registroEditando.id) {
+        // ATUALIZAR (PUT)
+        const resposta = await axios.put<RegistroResiduo>(`${API_URL}/${registroEditando.id}`, data);
+        setRegistros(registros.map((r) => r.id === registroEditando.id ? resposta.data : r));
+      } else {
+        // CRIAR (POST)
+        const resposta = await axios.post<RegistroResiduo>(API_URL, data);
+        setRegistros([resposta.data, ...registros]);
+      }
+      fecharModal();
     } catch (error) {
       setErro("Erro ao salvar o registro. Tente novamente.");
       throw error;
@@ -84,7 +105,6 @@ function App() {
       await axios.delete(`${API_URL}/${id}`);
       setRegistros(registros.filter((r) => r.id !== id));
       
-      // Ajuste: Se deletar o último item da página e ela não for a primeira, volta uma página
       if (registrosPaginados.length === 1 && currentPage > 1) {
         setCurrentPage(prev => prev - 1);
       }
@@ -100,10 +120,8 @@ function App() {
     );
   }, [registros, searchTerm]);
 
-  // --- Lógica de Paginação ---
   const totalPages = Math.ceil(registrosFiltrados.length / itensPorPagina);
   const startIndex = (currentPage - 1) * itensPorPagina;
-  // Fatiar a lista filtrada para exibir APENAS os itens da página atual
   const registrosPaginados = registrosFiltrados.slice(startIndex, startIndex + itensPorPagina);
 
   const gerarPaginas = () => {
@@ -114,7 +132,7 @@ function App() {
       for (let i = 1; i <= totalPages; i++) paginas.push(i);
     } else {
       let inicio = currentPage;
-      let fim = currentPage + maxVisiveis - 1;
+      const fim = currentPage + maxVisiveis - 1;
 
       if (fim >= totalPages - 1) {
         inicio = totalPages - maxVisiveis;
@@ -130,7 +148,6 @@ function App() {
 
   return (
     <div className="dashboard-layout">
-      {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-logo">
           <Recycle size={28} className="logo-icon" />
@@ -143,19 +160,17 @@ function App() {
         </nav>
       </aside>
 
-      {/* Área Principal */}
       <main className="main-content">
         <header className="content-header">
           <div className="header-title">
             <h1>Gestão de Resíduos</h1>
             <p>Monitore e registre dados de reciclagem por município.</p>
           </div>
-          <button className="btn-new" onClick={() => setIsModalOpen(true)}>
+          <button className="btn-new" onClick={abrirModalNovo}>
             <PlusCircle size={20} /> Novo Cadastro
           </button>
         </header>
 
-        {/* Mensagem de erro */}
         {erro && (
           <div className="alert-erro">
             {erro}
@@ -165,17 +180,15 @@ function App() {
           </div>
         )}
 
-        {/* Modal de Cadastro */}
         {isModalOpen && (
           <RegistroModal
-            onClose={() => setIsModalOpen(false)}
-            onSubmit={handleCriarRegistro}
+            onClose={fecharModal}
+            onSubmit={handleSalvarRegistro}
+            registroEditando={registroEditando}
           />
         )}
 
-        {/* Listagem */}
         <section className="data-section">
-          {/* Nova estrutura envolvendo a busca e o seletor de limite */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div className="search-bar" style={{ margin: 0, flex: '1 1 300px' }}>
               <Search size={20} />
@@ -187,7 +200,6 @@ function App() {
               />
             </div>
 
-            {/* Componente de seleção de itens por página */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <label htmlFor="limitePagina" style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>
                 Registros por página:
@@ -207,13 +219,7 @@ function App() {
 
           <div className="table-container">
             {loading ? (
-              <p
-                style={{
-                  textAlign: "center",
-                  padding: "2rem",
-                  color: "var(--text-muted)",
-                }}
-              >
+              <p style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>
                 Carregando dados...
               </p>
             ) : (
@@ -230,24 +236,26 @@ function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {/* Alteração crucial: Mapeando apenas a lista paginada */}
                     {registrosPaginados.map((reg) => (
                       <tr key={reg.id}>
-                        <td>
-                          <strong>{reg.municipio}</strong>
-                        </td>
-                        <td>
-                          <span className="badge-unit">{reg.estado}</span>
-                        </td>
-                        <td>
-                          {(reg.quantidadeGerada ?? 0).toLocaleString("pt-BR")}
-                        </td>
+                        <td><strong>{reg.municipio}</strong></td>
+                        <td><span className="badge-unit">{reg.estado}</span></td>
+                        <td>{(reg.quantidadeGerada ?? 0).toLocaleString("pt-BR")}</td>
                         <td>{(reg.taxaReciclagem ?? 0).toFixed(1)}%</td>
                         <td>{reg.ano}</td>
                         <td className="text-center">
                           <button
+                            className="btn-edit"
+                            onClick={() => abrirModalEdicao(reg)}
+                            style={{ marginRight: '8px', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}
+                            title="Editar"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
                             className="btn-delete"
                             onClick={() => deleteRegistro(reg.id)}
+                            title="Excluir"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -264,7 +272,6 @@ function App() {
                   </tbody>
                 </table>
 
-                {/* Controles de Paginação inseridos logo após a tabela */}
                 {totalPages > 1 && (
                   <div className="pagination-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', padding: '1.5rem 0', marginTop: '1rem' }}>
                     <button
@@ -285,12 +292,7 @@ function App() {
                             backgroundColor: currentPage === pagina ? '#10b981' : (pagina === '...' ? 'transparent' : 'white'),
                             color: currentPage === pagina ? 'white' : '#334155', borderRadius: '6px', cursor: pagina === '...' ? 'default' : 'pointer'
                           }}
-                          className={`btn-page-number ${
-                            currentPage === pagina ? "active" : ""
-                          } ${pagina === "..." ? "dots" : ""}`}
-                          onClick={() =>
-                            typeof pagina === "number" && setCurrentPage(pagina)
-                          }
+                          onClick={() => typeof pagina === "number" && setCurrentPage(pagina)}
                           disabled={pagina === "..."}
                         >
                           {pagina}
@@ -300,10 +302,8 @@ function App() {
 
                     <button
                       className="btn-page-arrow"
-                       style={{ padding: '8px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                      }
+                      style={{ padding: '8px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
+                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
                     >
                       <ChevronRight size={18} />

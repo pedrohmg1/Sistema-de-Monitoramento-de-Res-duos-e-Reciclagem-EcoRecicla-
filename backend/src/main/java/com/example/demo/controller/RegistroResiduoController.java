@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/residuos")
-@CrossOrigin(origins = "http://localhost:5173")
 @RequiredArgsConstructor
 public class RegistroResiduoController {
 
@@ -51,5 +50,12 @@ public class RegistroResiduoController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         // 404 Not Found
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<RegistroResiduo> atualizar(@PathVariable String id, @RequestBody RegistroResiduo registro) {
+        return service.atualizar(id, registro)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 }

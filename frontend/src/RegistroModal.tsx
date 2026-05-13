@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { SelectEstado } from "./SelectEstado";
 
@@ -16,9 +16,9 @@ type FormData = Omit<RegistroResiduo, "id">;
 interface RegistroModalProps {
   onClose: () => void;
   onSubmit: (data: FormData) => Promise<void>;
+  registroEditando?: RegistroResiduo | null; // Adicionado para suportar edição
 }
 
-// Calculado UMA vez, fora do componente — não recria a cada render
 const ANO_ATUAL = new Date().getFullYear();
 
 const formInicial: FormData = {
@@ -29,10 +29,24 @@ const formInicial: FormData = {
   ano: ANO_ATUAL,
 };
 
-export function RegistroModal({ onClose, onSubmit }: RegistroModalProps) {
-  // ✅ Estado local: mudanças aqui só re-renderizam ESTE componente
+export function RegistroModal({ onClose, onSubmit, registroEditando }: RegistroModalProps) {
   const [formData, setFormData] = useState<FormData>(formInicial);
   const [salvando, setSalvando] = useState(false);
+
+  // Efeito para carregar os dados no formulário quando for edição
+  useEffect(() => {
+    if (registroEditando) {
+      setFormData({
+        municipio: registroEditando.municipio,
+        estado: registroEditando.estado,
+        quantidadeGerada: registroEditando.quantidadeGerada,
+        taxaReciclagem: registroEditando.taxaReciclagem,
+        ano: registroEditando.ano,
+      });
+    } else {
+      setFormData(formInicial);
+    }
+  }, [registroEditando]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +62,7 @@ export function RegistroModal({ onClose, onSubmit }: RegistroModalProps) {
     <div className="modal-overlay">
       <div className="modal-container">
         <div className="modal-header">
-          <h2>Registrar Dados</h2>
+          <h2>{registroEditando ? "Editar Registro" : "Registrar Dados"}</h2>
           <button className="btn-close" onClick={onClose}>
             <X size={20} />
           </button>
@@ -117,7 +131,7 @@ export function RegistroModal({ onClose, onSubmit }: RegistroModalProps) {
             <input
               type="number"
               min="2000"
-              max={ANO_ATUAL} // ✅ Constante, não recria Date a cada render
+              max={ANO_ATUAL}
               value={formData.ano}
               onChange={(e) =>
                 setFormData({

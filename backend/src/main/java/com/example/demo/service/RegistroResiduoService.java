@@ -37,4 +37,14 @@ public class RegistroResiduoService {
         repository.deleteById(id);
         return true;
     }
+    // Método para atualizar
+    public Optional<RegistroResiduo> atualizar(String id, RegistroResiduo dadosAtualizados) {
+        return repository.findById(id).map(registroExistente -> {
+            // O MongoDB (presumindo pelo tipo String do ID) substituirá o documento,
+            // então precisamos garantir que o ID não seja alterado.
+            dadosAtualizados.setId(id);
+            return repository.save(dadosAtualizados);
+        });
+    }
 }
+
