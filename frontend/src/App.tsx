@@ -21,6 +21,10 @@ interface RegistroResiduo {
   quantidadeGerada: number; // toneladas
   taxaReciclagem: number; // percentual
   ano: number;
+  unidades: number;
+  nomeUnidade: string;
+  tipoUnidade: string;
+  operadorUnidade: string ;
 }
 
 const API_URL = "http://localhost:8080/api/residuos";
