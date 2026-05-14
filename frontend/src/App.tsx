@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Trash2,
@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { RegistroModal } from "./RegistroModal";
 
-// CORREÇÃO: Campos novos marcados com '?' (opcionais) para evitar erro de tipagem no Modal
 interface RegistroResiduo {
   id?: string;
   municipio: string;
@@ -31,47 +30,39 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [selectedEstado, setSelectedEstado] = useState(""); // Novo
-  const [filtroAbaixoMedia, setFiltroAbaixoMedia] = useState(false); // Novo
+  const [selectedEstado, setSelectedEstado] = useState(""); 
   const [registroEditando, setRegistroEditando] = useState<RegistroResiduo | null>(null);
   
-
   const [currentPage, setCurrentPage] = useState(1);
-  const [itensPorPagina, setItensPorPagina] = useState(10); // Novo estado para controlar o limite de exibição
+  const [itensPorPagina, setItensPorPagina] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Carrega os dados do backend ao iniciar
-  useEffect(() => {
-    carregarRegistros();
-  }, [currentPage, itensPorPagina, searchTerm]);
-
+  // Carrega os dados do backend
   const carregarRegistros = async () => {
     setLoading(true);
     setErro(null);
     try {
-      // Spring usa índice 0 para páginas, por isso currentPage - 1
       const resposta = await axios.get(
-        `${API_URL}?termo=${searchTerm}&page=${currentPage - 1}&size=${itensPorPagina}`
+        `${API_URL}?termo=${searchTerm}&estado=${selectedEstado}&page=${currentPage - 1}&size=${itensPorPagina}`
       );
-      // O Spring retorna os dados na propriedade 'content' e o total em 'totalPages'
       setRegistros(resposta.data.content);
       setTotalPages(resposta.data.totalPages);
     } catch {
-      setErro(
-        "Não foi possível conectar ao servidor. Verifique se o backend está rodando."
-      );
+      setErro("Não foi possível conectar ao servidor.");
     } finally {
       setLoading(false);
     }
   }
 
+  // Refaz a busca sempre que esses valores mudarem
   useEffect(() => {
     carregarRegistros();
-  }, []);
+  }, [currentPage, itensPorPagina, searchTerm, selectedEstado]);
 
+  // Volta para a página 1 sempre que um filtro mudar
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, itensPorPagina]);
+  }, [searchTerm, itensPorPagina, selectedEstado]);
 
   const abrirModalNovo = () => {
     setRegistroEditando(null);
@@ -88,11 +79,6 @@ function App() {
     setIsModalOpen(true);
   };
 
-  // Reseta para a página 1 sempre que o usuário pesquisar algo novo ou alterar o limite
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, itensPorPagina]);
-
   const handleSalvarRegistro = async (data: Omit<RegistroResiduo, "id">) => {
     setErro(null);
     try {
@@ -106,20 +92,6 @@ function App() {
         setRegistros([resposta.data, ...registros]);
       }
       fecharModal();
-
-       } catch (error) {
-      setErro("Erro ao salvar o registro. Tente novamente.");
-      throw error;
-    }
-  };
-
-  const handleCriarRegistro = async (data: Omit<RegistroResiduo, "id">) => {
-    setErro(null);
-    try {
-      await axios.post<RegistroResiduo>(API_URL, data);
-      setIsModalOpen(false);
-      setCurrentPage(1); // Volta pro início para ver o novo registro
-      carregarRegistros();
     } catch (error) {
       setErro("Erro ao salvar o registro. Tente novamente.");
       throw error;
@@ -131,24 +103,11 @@ function App() {
     setErro(null);
     try {
       await axios.delete(`${API_URL}/${id}`);
-      carregarRegistros(); // Puxa a lista atualizada do backend
+      carregarRegistros(); 
     } catch {
       setErro("Erro ao deletar o registro.");
     }
   };
-
-/*   const registrosFiltrados = useMemo(() => {
-    return registros.filter(r =>
-      (r.municipio ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (r.estado ?? '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [registros, searchTerm]); */
-
-  // --- Lógica de Paginação ---
-/*   const totalPages = Math.ceil(registrosFiltrados.length / itensPorPagina); */
-  /* const startIndex = (currentPage - 1) * itensPorPagina; */
-  // Fatiar a lista filtrada para exibir APENAS os itens da página atual
- /*  const registrosPaginados = registrosFiltrados.slice(startIndex, startIndex + itensPorPagina); */
 
   const gerarPaginas = () => {
     const maxVisiveis = 6;
@@ -216,17 +175,53 @@ function App() {
 
         <section className="data-section">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <div className="search-bar" style={{ margin: 0, flex: '1 1 300px' }}>
-              <Search size={20} />
-              <input
-  type="text"
-  placeholder="Pesquisar por município...."
-  value={searchTerm}
-  onChange={(e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1); // Retorna à página 1
-  }}
-/>
+            
+            <div style={{ display: 'flex', gap: '1rem', flex: '1 1 300px' }}>
+              <div className="search-bar" style={{ margin: 0, flex: 1 }}>
+                <Search size={20} />
+                <input
+                  type="text"
+                  placeholder="Pesquisar por município...."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              {/* Novo Filtro de Estado */}
+              <select
+                value={selectedEstado}
+                onChange={(e) => setSelectedEstado(e.target.value)}
+                style={{ padding: '0.4rem', borderRadius: '4px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', backgroundColor: 'white' }}
+              >
+                <option value="">Todos os Estados</option>
+                <option value="AC">Acre (AC)</option>
+                <option value="AL">Alagoas (AL)</option>
+                <option value="AP">Amapá (AP)</option>
+                <option value="AM">Amazonas (AM)</option>
+                <option value="BA">Bahia (BA)</option>
+                <option value="CE">Ceará (CE)</option>
+                <option value="DF">Distrito Federal (DF)</option>
+                <option value="ES">Espírito Santo (ES)</option>
+                <option value="GO">Goiás (GO)</option>
+                <option value="MA">Maranhão (MA)</option>
+                <option value="MT">Mato Grosso (MT)</option>
+                <option value="MS">Mato Grosso do Sul (MS)</option>
+                <option value="MG">Minas Gerais (MG)</option>
+                <option value="PA">Pará (PA)</option>
+                <option value="PB">Paraíba (PB)</option>
+                <option value="PR">Paraná (PR)</option>
+                <option value="PE">Pernambuco (PE)</option>
+                <option value="PI">Piauí (PI)</option>
+                <option value="RJ">Rio de Janeiro (RJ)</option>
+                <option value="RN">Rio Grande do Norte (RN)</option>
+                <option value="RS">Rio Grande do Sul (RS)</option>
+                <option value="RO">Rondônia (RO)</option>
+                <option value="RR">Roraima (RR)</option>
+                <option value="SC">Santa Catarina (SC)</option>
+                <option value="SP">São Paulo (SP)</option>
+                <option value="SE">Sergipe (SE)</option>
+                <option value="TO">Tocantins (TO)</option>
+              </select>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -234,12 +229,9 @@ function App() {
                 Registros por página:
               </label>
               <select
-  id="limitePagina"
-  value={itensPorPagina}
-  onChange={(e) => {
-    setItensPorPagina(Number(e.target.value));
-    setCurrentPage(1); // Retorna à página 1
-  }}
+                id="limitePagina"
+                value={itensPorPagina}
+                onChange={(e) => setItensPorPagina(Number(e.target.value))}
                 style={{ padding: '0.4rem', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: 'white', outline: 'none', cursor: 'pointer' }}
               >
                 <option value={10}>10</option>
@@ -256,19 +248,20 @@ function App() {
               </p>
             ) : (
               <>
-                <table className="data-table">
+                {/* Adicione style={{ width: '100%', tableLayout: 'fixed' }} na tabela */}
+                <table className="data-table" style={{ width: '100%', tableLayout: 'fixed' }}>
                   <thead>
                     <tr>
-                      <th>Município</th>
-                      <th>Estado</th>
-                      <th>Qtd. Gerada Total(ton)</th>
-                      <th>Residuos domiciliares e publicos</th>
-                      <th>Ano</th>
-                      <th className="text-center">Ações</th>
+                      {/* Defina a porcentagem de espaço que cada coluna vai ocupar */}
+                      <th style={{ width: '25%' }}>Município</th>
+                      <th style={{ width: '10%' }}>Estado</th>
+                      <th style={{ width: '20%' }}>Qtd. Gerada Total(ton)</th>
+                      <th style={{ width: '25%' }}>Residuos domiciliares e publicos</th>
+                      <th style={{ width: '10%' }}>Ano</th>
+                      <th className="text-center" style={{ width: '10%' }}>Ações</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {/* Alteração crucial: Mapeando apenas a lista paginada */}
                     {registros.map((reg) => (
                       <tr key={reg.id}>
                         <td><strong>{reg.municipio}</strong></td>

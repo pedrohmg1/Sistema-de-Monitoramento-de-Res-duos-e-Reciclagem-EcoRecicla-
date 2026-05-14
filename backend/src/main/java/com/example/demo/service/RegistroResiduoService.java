@@ -15,18 +15,26 @@ public class RegistroResiduoService {
     
     private final RegistroResiduoRepository repository;
 
-    public Page<RegistroResiduo> listarTodos(String termo, Pageable pageable) {
-    if (termo != null && !termo.trim().isEmpty()) {
-        return repository.buscarPorTermo(termo, pageable);
+    // <-- MÉTODO ATUALIZADO
+    public Page<RegistroResiduo> listarTodos(String termo, String estado, Pageable pageable) {
+        boolean temTermo = termo != null && !termo.trim().isEmpty();
+        boolean temEstado = estado != null && !estado.trim().isEmpty();
+
+        if (temTermo && temEstado) {
+            return repository.buscarPorTermoEEstado(termo, estado, pageable);
+        } else if (temTermo) {
+            return repository.buscarPorTermo(termo, pageable);
+        } else if (temEstado) {
+            return repository.buscarPorEstadoPaginado(estado, pageable);
+        }
+        
+        return repository.findAll(pageable);
     }
-    return repository.findAll(pageable);
-}
 
     public List<RegistroResiduo> buscarPorEstado(String estado) {
         return repository.findByEstadoIgnoreCase(estado);
     }
 
-    // O retorno em Optional é fundamental para o Controller tratar o Erro 404
     public Optional<RegistroResiduo> buscarPorId(String id) {
         return repository.findById(id);
     }
@@ -42,14 +50,11 @@ public class RegistroResiduoService {
         repository.deleteById(id);
         return true;
     }
-    // Método para atualizar
+
     public Optional<RegistroResiduo> atualizar(String id, RegistroResiduo dadosAtualizados) {
         return repository.findById(id).map(registroExistente -> {
-            // O MongoDB (presumindo pelo tipo String do ID) substituirá o documento,
-            // então precisamos garantir que o ID não seja alterado.
             dadosAtualizados.setId(id);
             return repository.save(dadosAtualizados);
         });
     }
 }
-

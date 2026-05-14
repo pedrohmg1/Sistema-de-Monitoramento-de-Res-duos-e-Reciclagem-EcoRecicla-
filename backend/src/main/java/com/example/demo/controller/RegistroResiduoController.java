@@ -21,14 +21,14 @@ public class RegistroResiduoController {
     @GetMapping
     public ResponseEntity<Page<RegistroResiduo>> listar(
         @RequestParam(required = false, defaultValue = "") String termo,
+        @RequestParam(required = false, defaultValue = "") String estado, // <-- NOVO PARÂMETRO AQUI
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size) {
     
-    Pageable pageable = PageRequest.of(page, size);
-    return ResponseEntity.ok(service.listarTodos(termo, pageable));
-}
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(service.listarTodos(termo, estado, pageable)); // <-- PASSAR ESTADO PARA O SERVIÇO
+    }
 
-    // Endpoint para o filtro dinâmico no frontend
     @GetMapping("/estado/{uf}")
     public ResponseEntity<List<RegistroResiduo>> buscarPorEstado(@PathVariable String uf) {
         return ResponseEntity.ok(service.buscarPorEstado(uf));
@@ -36,7 +36,6 @@ public class RegistroResiduoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<RegistroResiduo> buscarPorId(@PathVariable String id) {
-        // Uso do Optional para retornar 200 ou 404 (Tratamento de Erro exigido)
         return service.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
@@ -46,7 +45,6 @@ public class RegistroResiduoController {
     public ResponseEntity<RegistroResiduo> adicionar(@RequestBody RegistroResiduo registro) {
         RegistroResiduo novoRegistro = service.salvar(registro);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoRegistro);
-        // 201
     }
 
     @DeleteMapping("/{id}")
@@ -54,10 +52,8 @@ public class RegistroResiduoController {
         boolean deletado = service.deletar(id);
         if (deletado) {
             return ResponseEntity.noContent().build();
-            // 204 No Content
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        // 404 Not Found
     }
 
     @PutMapping("/{id}")

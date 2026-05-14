@@ -9,8 +9,15 @@ import org.springframework.data.mongodb.repository.Query;
 
 public interface RegistroResiduoRepository extends MongoRepository<RegistroResiduo, String> {
     
-    // Métodos customizados exigidos pelo projeto
     List<RegistroResiduo> findByEstadoIgnoreCase(String estado);
+    
     @Query("{ '$or': [ { 'municipio': { $regex: ?0, $options: 'i' } }, { 'estado': { $regex: ?0, $options: 'i' } } ] }")
     Page<RegistroResiduo> buscarPorTermo(String termo, Pageable pageable);
+
+    // <-- NOVOS MÉTODOS PARA O FILTRO
+    @Query("{ 'estado': { $regex: ?0, $options: 'i' } }")
+    Page<RegistroResiduo> buscarPorEstadoPaginado(String estado, Pageable pageable);
+
+    @Query("{ 'municipio': { $regex: ?0, $options: 'i' }, 'estado': { $regex: ?1, $options: 'i' } }")
+    Page<RegistroResiduo> buscarPorTermoEEstado(String termo, String estado, Pageable pageable);
 }
