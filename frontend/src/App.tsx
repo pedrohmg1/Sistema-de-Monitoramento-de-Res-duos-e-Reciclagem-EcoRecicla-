@@ -110,21 +110,42 @@ function App() {
   };
 
   const gerarPaginas = () => {
-    const maxVisiveis = 6;
+    const maxVisiveis = 5; // Quantidade de páginas que aparecem no bloco central
     const paginas: (number | string)[] = [];
 
-    if (totalPages <= maxVisiveis + 1) {
+    // Se tiver poucas páginas, mostra todas
+    if (totalPages <= maxVisiveis + 2) {
       for (let i = 1; i <= totalPages; i++) paginas.push(i);
     } else {
-      let inicio = currentPage;
-      const fim = currentPage + maxVisiveis - 1;
+      // Define o início e fim da "janela" que acompanha a página atual
+      let inicio = Math.max(1, currentPage - 2);
+      let fim = Math.min(totalPages, currentPage + 2);
 
-      if (fim >= totalPages - 1) {
-        inicio = totalPages - maxVisiveis;
-        for (let i = inicio; i <= totalPages; i++) paginas.push(i);
-      } else {
-        for (let i = inicio; i <= fim; i++) paginas.push(i);
-        paginas.push('...');
+      // Ajustes para quando estiver muito no começo ou muito no final
+      if (currentPage <= 3) {
+        fim = maxVisiveis;
+      } else if (currentPage >= totalPages - 2) {
+        inicio = totalPages - maxVisiveis + 1;
+      }
+
+      // 1. LÓGICA NOVA: Adiciona a página 1 e reticências se o bloco central estiver longe do início
+      if (inicio > 1) {
+        paginas.push(1);
+        if (inicio > 2) {
+          paginas.push('...');
+        }
+      }
+
+      // 2. Adiciona as páginas do meio
+      for (let i = inicio; i <= fim; i++) {
+        paginas.push(i);
+      }
+
+      // 3. Adiciona as reticências e a última página se o bloco central estiver longe do fim
+      if (fim < totalPages) {
+        if (fim < totalPages - 1) {
+          paginas.push('...');
+        }
         paginas.push(totalPages);
       }
     }
