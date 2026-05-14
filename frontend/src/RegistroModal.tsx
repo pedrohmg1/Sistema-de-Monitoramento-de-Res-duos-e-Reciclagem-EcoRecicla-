@@ -6,8 +6,8 @@ interface RegistroResiduo {
   id?: string;
   municipio: string;
   estado: string;
-  quantidadeGerada: number;
-  taxaReciclagem: number;
+  residuos_total: string;
+  residuos_domiciliares_e_publicos: string;
   ano: number;
 }
 
@@ -24,8 +24,8 @@ const ANO_ATUAL = new Date().getFullYear();
 const formInicial: FormData = {
   municipio: "",
   estado: "",
-  quantidadeGerada: 0,
-  taxaReciclagem: 0,
+  residuos_total: "",
+  residuos_domiciliares_e_publicos: "",
   ano: ANO_ATUAL,
 };
 
@@ -39,8 +39,8 @@ export function RegistroModal({ onClose, onSubmit, registroEditando }: RegistroM
       setFormData({
         municipio: registroEditando.municipio,
         estado: registroEditando.estado,
-        quantidadeGerada: registroEditando.quantidadeGerada,
-        taxaReciclagem: registroEditando.taxaReciclagem,
+        residuos_total: registroEditando.residuos_total,
+        residuos_domiciliares_e_publicos: registroEditando.residuos_domiciliares_e_publicos,
         ano: registroEditando.ano,
       });
     } else {
@@ -93,33 +93,32 @@ export function RegistroModal({ onClose, onSubmit, registroEditando }: RegistroM
           </div>
           <div className="form-row">
             <div className="form-field">
-              <label>Quantidade Gerada (ton)</label>
+              <label>Quantidade Gerada Total (ton)</label>
               <input
                 type="number"
                 min="0"
                 step="0.01"
-                value={formData.quantidadeGerada}
+                value={formData.residuos_total}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    quantidadeGerada: parseFloat(e.target.value) || 0,
+                    residuos_total:(e.target.value)
                   })
                 }
                 required
               />
             </div>
             <div className="form-field">
-              <label>Taxa de Reciclagem (%)</label>
+              <label>Residuos Domiciliares e Publicos</label>
               <input
                 type="number"
                 min="0"
-                max="100"
                 step="0.1"
-                value={formData.taxaReciclagem}
+                value={formData.residuos_domiciliares_e_publicos}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    taxaReciclagem: parseFloat(e.target.value) || 0,
+                    residuos_domiciliares_e_publicos:(e.target.value)
                   })
                 }
                 required

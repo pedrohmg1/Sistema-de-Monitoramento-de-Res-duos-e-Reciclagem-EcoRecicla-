@@ -18,8 +18,8 @@ interface RegistroResiduo {
   id?: string;
   municipio: string;
   estado: string;
-  quantidadeGerada: number;
-  taxaReciclagem: number;
+  residuos_total: number;
+  residuos_domiciliares_e_publicos: number;
   ano: number;
 }
 
@@ -220,7 +220,7 @@ function App() {
               <Search size={20} />
               <input
   type="text"
-  placeholder="Pesquisar por município ou estado..."
+  placeholder="Pesquisar por município...."
   value={searchTerm}
   onChange={(e) => {
     setSearchTerm(e.target.value);
@@ -261,8 +261,8 @@ function App() {
                     <tr>
                       <th>Município</th>
                       <th>Estado</th>
-                      <th>Qtd. Gerada (ton)</th>
-                      <th>Taxa Reciclagem (%)</th>
+                      <th>Qtd. Gerada Total(ton)</th>
+                      <th>Residuos domiciliares e publicos</th>
                       <th>Ano</th>
                       <th className="text-center">Ações</th>
                     </tr>
@@ -273,8 +273,8 @@ function App() {
                       <tr key={reg.id}>
                         <td><strong>{reg.municipio}</strong></td>
                         <td><span className="badge-unit">{reg.estado}</span></td>
-                        <td>{(reg.quantidadeGerada ?? 0).toLocaleString("pt-BR")}</td>
-                        <td>{(reg.taxaReciclagem ?? 0).toFixed(1)}%</td>
+                        <td>{reg.residuos_total}</td>
+                        <td>{reg.residuos_domiciliares_e_publicos}</td>
                         <td>{reg.ano}</td>
                         <td className="text-center">
                           <button

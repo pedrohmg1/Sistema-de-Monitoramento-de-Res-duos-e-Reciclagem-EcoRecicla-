@@ -11,8 +11,6 @@ public interface RegistroResiduoRepository extends MongoRepository<RegistroResid
     
     // Métodos customizados exigidos pelo projeto
     List<RegistroResiduo> findByEstadoIgnoreCase(String estado);
-    List<RegistroResiduo> findByTaxaReciclagemGreaterThan(Double taxa);
-
     @Query("{ '$or': [ { 'municipio': { $regex: ?0, $options: 'i' } }, { 'estado': { $regex: ?0, $options: 'i' } } ] }")
     Page<RegistroResiduo> buscarPorTermo(String termo, Pageable pageable);
 }

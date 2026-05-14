@@ -16,7 +16,7 @@ public class RegistroResiduo {
     private String id;
     private String municipio;
     private String estado;
-    private Double quantidadeGerada; // em toneladas
-    private Double taxaReciclagem;   // percentual
+    private String residuos_total; // em toneladas
+    private String residuos_domiciliares_e_publicos;   // percentual
     private Integer ano;
 }
