@@ -15,7 +15,6 @@ public class RegistroResiduoService {
     
     private final RegistroResiduoRepository repository;
 
-    // <-- MÉTODO ATUALIZADO
     public Page<RegistroResiduo> listarTodos(String termo, String estado, Pageable pageable) {
         boolean temTermo = termo != null && !termo.trim().isEmpty();
         boolean temEstado = estado != null && !estado.trim().isEmpty();

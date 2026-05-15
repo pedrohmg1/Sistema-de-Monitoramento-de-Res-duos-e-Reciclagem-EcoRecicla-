@@ -42,8 +42,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(Map.of(
             "status", status.value(),
             "erro", status.getReasonPhrase(),
-            "mensagem", mensagem,
-            "timestamp", LocalDateTime.now().toString()
+            "mensagem", mensagem
         ));
     }
 }
