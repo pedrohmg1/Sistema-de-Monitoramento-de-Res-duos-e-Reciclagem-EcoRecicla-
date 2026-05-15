@@ -170,6 +170,7 @@ function App() {
         <header className="content-header">
           <div className="header-title">
             <h1>Gestão de Resíduos</h1>
+            <p className="italic-faded">Fonte dos dados desse banco (SNIS): <a href="https://app4.cidades.gov.br/serieHistorica/">https://app4.cidades.gov.br/serieHistorica/</a></p>
             <p>Monitore e registre dados de reciclagem por município.</p>
           </div>
           <button className="btn-new" onClick={abrirModalNovo}>

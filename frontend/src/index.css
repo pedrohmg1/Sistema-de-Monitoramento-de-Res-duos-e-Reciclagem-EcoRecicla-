@@ -254,7 +254,10 @@ input, select {
   border-radius: 6px;
   transition: background 0.2s;
 }
-
+.italic-faded {
+  font-style: italic;
+  opacity: 75%;
+}
 .empty-state-cell {
   text-align: center; /* Centraliza o texto horizontalmente */
   padding: 3rem 0;    /* Adiciona um espaçamento vertical maior */
