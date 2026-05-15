@@ -235,7 +235,19 @@ ecorecicla/
 │
 └── README.md
 ```
-
+```mermaid
+flowchart TD
+    A([Usuário]) -->|Interage com a interface| B(Frontend: React / Vite)
+    B -->|Requisições HTTP / REST| C(Backend: Controller)
+    
+    subgraph Backend [Backend: Spring Boot]
+        C(Controller<br>RegistroResiduoController) -->|Delega processamento| D(Service<br>RegistroResiduoService)
+        D -->|Acessa/Modifica dados| E(Repository<br>RegistroResiduoRepository)
+        E -.->|Mapeamento| F(Model<br>RegistroResiduo)
+    end
+    
+    E -->|Leitura e Escrita| G[(Banco de Dados)]
+```
 ---
 
 ## Modelo de Dados
