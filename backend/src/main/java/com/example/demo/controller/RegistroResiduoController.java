@@ -10,6 +10,8 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api/residuos")
@@ -19,20 +21,27 @@ public class RegistroResiduoController {
     private final RegistroResiduoService service;
 
     @GetMapping
-    public ResponseEntity<Page<RegistroResiduo>> listar(
+    public ResponseEntity<?> listar(
         @RequestParam(required = false, defaultValue = "") String termo,
-        @RequestParam(required = false, defaultValue = "") String estado, // <-- NOVO PARÂMETRO AQUI
+        @RequestParam(required = false, defaultValue = "") String estado,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size) {
     
+        if (page < 0) return ResponseEntity.badRequest().body(Map.of("mensagem", "O parâmetro 'page' não pode ser negativo."));
+        if (size <= 0) return ResponseEntity.badRequest().body(Map.of("mensagem", "O parâmetro 'size' deve ser maior que zero."));
+    
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(service.listarTodos(termo, estado, pageable)); // <-- PASSAR ESTADO PARA O SERVIÇO
+        return ResponseEntity.ok(service.listarTodos(termo, estado, pageable));
     }
 
     @GetMapping("/estado/{uf}")
     public ResponseEntity<List<RegistroResiduo>> buscarPorEstado(@PathVariable String uf) {
-        return ResponseEntity.ok(service.buscarPorEstado(uf));
-    }
+        List<RegistroResiduo> resultado = service.buscarPorEstado(uf);
+        if (resultado.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(resultado);
+}
 
     @GetMapping("/{id}")
     public ResponseEntity<RegistroResiduo> buscarPorId(@PathVariable String id) {
@@ -42,9 +51,10 @@ public class RegistroResiduoController {
     }
 
     @PostMapping
-    public ResponseEntity<RegistroResiduo> adicionar(@RequestBody RegistroResiduo registro) {
-        RegistroResiduo novoRegistro = service.salvar(registro);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novoRegistro);
+    public ResponseEntity<?> adicionar(@RequestBody RegistroResiduo registro) {
+        String erro = validar(registro);
+        if (erro != null) return ResponseEntity.badRequest().body(Map.of("mensagem", erro));
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.salvar(registro));
     }
 
     @DeleteMapping("/{id}")
@@ -57,9 +67,18 @@ public class RegistroResiduoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RegistroResiduo> atualizar(@PathVariable String id, @RequestBody RegistroResiduo registro) {
+    public ResponseEntity<?> atualizar(@PathVariable String id, @RequestBody RegistroResiduo registro) {
+        String erro = validar(registro);
+        if (erro != null) return ResponseEntity.badRequest().body(Map.of("mensagem", erro));
         return service.atualizar(id, registro)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    private String validar(RegistroResiduo r) {
+        if (r.getMunicipio() == null || r.getMunicipio().isBlank()) return "Campo 'municipio' é obrigatório.";
+        if (r.getEstado() == null || r.getEstado().isBlank()) return "Campo 'estado' é obrigatório.";
+        if (r.getAno() == null) return "Campo 'ano' é obrigatório.";
+        return null;
     }
 }

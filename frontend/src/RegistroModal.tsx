@@ -63,6 +63,7 @@ export function RegistroModal({ onClose, onSubmit, registroEditando }: RegistroM
       <div className="modal-container">
         <div className="modal-header">
           <h2>{registroEditando ? "Editar Registro" : "Registrar Dados"}</h2>
+          <h5>{registroEditando && ("ID: " + registroEditando.id)}</h5>
           <button className="btn-close" onClick={onClose}>
             <X size={20} />
           </button>
